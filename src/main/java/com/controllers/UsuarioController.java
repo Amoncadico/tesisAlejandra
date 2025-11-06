@@ -22,7 +22,7 @@ import com.repository.UserRepository;
 
 @CrossOrigin(origins = "http://localhost:4200", maxAge = 3600, allowCredentials="true")
 @RestController
-@RequestMapping("/api/usuario") 
+@RequestMapping("/api/usuario")
 public class UsuarioController {
 
     private final UserRepository userRepository;

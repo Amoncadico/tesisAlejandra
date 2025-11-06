@@ -44,9 +44,13 @@ public class Rutina {
     public Rutina() {
     }
 
-    public Rutina(String nombre, Date fechaCreacion) {
+    public Rutina(String nombre, Date fechaCreacion, Set<Registro> registros, Set<Item> items, User profesional, User paciente) {
         this.nombre = nombre;
         this.fechaCreacion = fechaCreacion;
+        this.registros = registros;
+        this.items = items;
+        this.profesional = profesional;
+        this.paciente = paciente;
     }
 
     public Long getId() {
@@ -70,4 +74,35 @@ public class Rutina {
         this.fechaCreacion = fechaCreacion;
     }
 
+    public Set<Registro> getRegistros() {
+        return registros;
+    }
+
+    public void setRegistros(Set<Registro> registros) {
+        this.registros = registros;
+    }
+
+    public Set<Item> getItems() {
+        return items;
+    }
+
+    public void setItems(Set<Item> items) {
+        this.items = items;
+    }
+
+    public User getProfesional() {
+        return profesional;
+    }
+
+    public void setProfesional(User profesional) {
+        this.profesional = profesional;
+    }
+
+    public User getPaciente() {
+        return paciente;
+    }
+
+    public void setPaciente(User paciente) {
+        this.paciente = paciente;
+    }
 }

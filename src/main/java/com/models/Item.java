@@ -2,18 +2,15 @@ package com.models;
 
 import java.time.Duration;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -38,21 +35,23 @@ public class Item {
 
     @ManyToOne
     @JoinColumn(name = "rutina")
+    @JsonIgnore
     private Rutina rutina;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "ejercicio", referencedColumnName = "id")
-    @JsonManagedReference
+    @ManyToOne
+    @JoinColumn(name = "ejercicio")
     private Ejercicio ejercicio;
 
     public Item() {
     }
 
-    public Item(int series, int repeticiones, Duration duracion, String observaciones) {
+    public Item(int series, int repeticiones, Duration duracion, String observaciones, Ejercicio ejercicio, Rutina rutina) {
         this.series = series;
         this.repeticiones = repeticiones;
         this.duracion = duracion;
         this.observaciones = observaciones;
+        this.ejercicio = ejercicio;
+        this.rutina = rutina;
     }
     
     public Long getId() {
@@ -103,5 +102,11 @@ public class Item {
         this.ejercicio = ejercicio;
     }
     
-    
+    public Rutina getRutina() {
+        return rutina;
+    }
+
+    public void setRutina(Rutina rutina) {
+        this.rutina = rutina;
+    }
 }

@@ -1,14 +1,18 @@
 package com.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -34,15 +38,23 @@ public class Ejercicio {
     @Column(name = "descripcion")
     private String descripcion;
 
+    @Column(name = "url")
+    private String url;
+    
+    @OneToMany(mappedBy = "ejercicio", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Item> items = new ArrayList<>();
+
     public Ejercicio() {
     }
 
-    public Ejercicio(String nombre, String zona, String categoria, String dificultad, String descripcion) {
+    public Ejercicio(String nombre, String zona, String categoria, String dificultad, String descripcion, String url) {
         this.nombre = nombre;
         this.zona = zona;
         this.categoria = categoria;
         this.dificultad = dificultad;
         this.descripcion = descripcion;
+        this.url = url;
     }
 
     public Long getId() {
@@ -93,15 +105,19 @@ public class Ejercicio {
         this.descripcion = descripcion;
     }
 
-    @OneToOne(mappedBy = "ejercicio", fetch = FetchType.LAZY)
-    @JsonBackReference
-    private Item item;
-
-    public Item getItem() {
-        return item;
+    public String getUrl() {
+        return url;
     }
 
-    public void setItem(Item item) {
-        this.item = item;
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public List<Item> getItems() {
+        return items;
+    }
+
+    public void setItems(List<Item> items) {
+        this.items = items;
     }
 }

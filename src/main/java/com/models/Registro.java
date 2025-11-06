@@ -2,6 +2,8 @@ package com.models;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,16 +35,18 @@ public class Registro {
 
     @ManyToOne
     @JoinColumn(name = "rutina")
+    @JsonIgnore
     private Rutina rutina;
 
     public Registro() {
     }
 
-    public Registro(Date fecha, boolean completado, String nivelDificultad, String observaciones) {
+    public Registro(Date fecha, boolean completado, String nivelDificultad, String observaciones, Rutina rutina) {
         this.fecha = fecha;
         this.completado = completado;
         this.nivelDificultad = nivelDificultad;
         this.observaciones = observaciones;
+        this.rutina = rutina;
     }
 
     public Long getId() {
@@ -83,6 +87,14 @@ public class Registro {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public Rutina getRutina() {
+        return rutina;
+    }
+
+    public void setRutina(Rutina rutina) {
+        this.rutina = rutina;
     }
 
 }
