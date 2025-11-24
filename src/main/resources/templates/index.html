@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Alejandra - Servidor Activo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f766e 0%, #065f46 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 600px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #10b981;
+            border-radius: 50px;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .endpoints {
+            margin-top: 30px;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .endpoints h3 {
+            margin-bottom: 15px;
+            color: #10b981;
+        }
+        
+        .endpoint {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .endpoint span {
+            color: #6ee7b7;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        .snoopy-image {
+            width: 150px;
+            height: auto;
+            margin: 20px auto;
+            display: block;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://res.cloudinary.com/dzkh2ivzg/image/upload/v1763997031/x7kmymnmszb06i3rzp1a.png" 
+             alt="Snoopy" 
+             class="snoopy-image">
+        
+        <div class="status">
+            ✓ SERVIDOR ACTIVO
+        </div>
+        
+        <h1>🚀 API Alejandra</h1>
+        <p>El servidor Spring Boot está funcionando correctamente</p>
+        <p>Base de datos: Supabase PostgreSQL (conectado)</p>
+        
+        <div class="endpoints">
+            <h3>📡 Endpoints Disponibles:</h3>
+            <div class="endpoint">
+                <span>POST</span> /api/auth/signin - Iniciar sesión
+            </div>
+            <div class="endpoint">
+                <span>POST</span> /api/auth/signup - Registrar usuario
+            </div>
+            <div class="endpoint">
+                <span>GET</span> /api/test/all - Contenido público
+            </div>
+            <div class="endpoint">
+                <span>POST</span> /api/ejercicio/crear - Crear ejercicio
+            </div>
+            <div class="endpoint">
+                <span>POST</span> /api/rutina/crear - Crear rutina
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>💻 Desplegado en Render</p>
+            <p>🔗 Frontend: <a href="https://alejandraweb-olive.vercel.app" style="color: #6ee7b7; text-decoration: none;">alejandraweb-olive.vercel.app</a></p>
+        </div>
+    </div>
+</body>
+</html>
