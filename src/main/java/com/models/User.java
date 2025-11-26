@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -55,10 +56,15 @@ public class User {
              inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
 
-  public User() {
-  }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "profesional_id")
+  private User profesionalAsignado;
 
-  public User(String username, String email, String password) {
+  @OneToMany(mappedBy = "profesionalAsignado", fetch = FetchType.LAZY)
+  private Set<User> pacientesAsignados = new HashSet<>();
+
+  public User() {
+  }  public User(String username, String email, String password) {
     this.username = username;
     this.email = email;
     this.password = password;
@@ -102,6 +108,22 @@ public class User {
 
   public void setRoles(Set<Role> roles) {
     this.roles = roles;
+  }
+
+  public User getProfesionalAsignado() {
+    return profesionalAsignado;
+  }
+
+  public void setProfesionalAsignado(User profesionalAsignado) {
+    this.profesionalAsignado = profesionalAsignado;
+  }
+
+  public Set<User> getPacientesAsignados() {
+    return pacientesAsignados;
+  }
+
+  public void setPacientesAsignados(Set<User> pacientesAsignados) {
+    this.pacientesAsignados = pacientesAsignados;
   }
 
 }

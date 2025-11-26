@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.models.ERole;
 import com.models.Role;
 import com.models.User;
+import com.payload.request.CreatePatientRequest;
 import com.payload.request.LoginRequest;
 import com.payload.request.SignupRequest;
 import com.payload.response.MessageResponse;
@@ -93,7 +94,7 @@ public class AuthController {
     Set<Role> roles = new HashSet<>();
 
     if (strRoles == null) {
-      Role userRole = roleRepository.findByName(ERole.ROLE_EVALUADOR)
+      Role userRole = roleRepository.findByName(ERole.ROLE_PACIENTE)
           .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
       roles.add(userRole);
     } else {
@@ -106,13 +107,13 @@ public class AuthController {
 
           break;
         case "vis":
-          Role modRole = roleRepository.findByName(ERole.ROLE_VISADOR)
+          Role modRole = roleRepository.findByName(ERole.ROLE_PROFESIONAL)
               .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
           roles.add(modRole);
 
           break;
         default:
-          Role userRole = roleRepository.findByName(ERole.ROLE_EVALUADOR)
+          Role userRole = roleRepository.findByName(ERole.ROLE_PACIENTE)
               .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
           roles.add(userRole);
         }
@@ -125,10 +126,65 @@ public class AuthController {
     return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
   }
 
+  @PostMapping("/create-paciente")
+  public ResponseEntity<?> createPatientByProfessional(@Valid @RequestBody CreatePatientRequest createPatientRequest) {
+    // Obtener el usuario autenticado (el profesional)
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+    
+    // Verificar que el usuario autenticado sea un profesional o admin
+    User profesional = userRepository.findById(userDetails.getId())
+        .orElseThrow(() -> new RuntimeException("Error: User not found."));
+    
+    boolean isProfesionalOrAdmin = profesional.getRoles().stream()
+        .anyMatch(role -> role.getName().equals(ERole.ROLE_PROFESIONAL) ||
+                          role.getName().equals(ERole.ROLE_ADMIN));
+    
+    if (!isProfesionalOrAdmin) {
+      return ResponseEntity.badRequest()
+          .body(new MessageResponse("Error: Only professionals or admins can create patient profiles!"));
+    }
+
+    // Verificar que el username no esté en uso
+    if (userRepository.existsByUsername(createPatientRequest.getUsername())) {
+      return ResponseEntity.badRequest()
+          .body(new MessageResponse("Error: Username is already taken!"));
+    }
+
+    // Verificar que el email no esté en uso
+    if (userRepository.existsByEmail(createPatientRequest.getEmail())) {
+      return ResponseEntity.badRequest()
+          .body(new MessageResponse("Error: Email is already in use!"));
+    }
+
+    // Crear el nuevo paciente
+    User patient = new User(
+        createPatientRequest.getUsername(),
+        createPatientRequest.getEmail(),
+        encoder.encode(createPatientRequest.getPassword())
+    );
+
+    // Asignar el rol de paciente
+    Role patientRole = roleRepository.findByName(ERole.ROLE_PACIENTE)
+        .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+    Set<Role> roles = new HashSet<>();
+    roles.add(patientRole);
+    patient.setRoles(roles);
+
+    // Asignar el profesional al paciente
+    patient.setProfesionalAsignado(profesional);
+
+    // Guardar el paciente
+    userRepository.save(patient);
+
+    return ResponseEntity.ok(new MessageResponse("Patient profile created successfully and assigned to professional!"));
+  }
+
   @PostMapping("/signout")
   public ResponseEntity<?> logoutUser() {
     ResponseCookie cookie = jwtUtils.getCleanJwtCookie();
     return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
         .body(new MessageResponse("You've been signed out!"));
   }
+
 }
