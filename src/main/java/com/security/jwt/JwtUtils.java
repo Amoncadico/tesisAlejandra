@@ -35,6 +35,9 @@ public class JwtUtils {
   @Value("${bezkoder.app.jwtCookieName}")
   private String jwtCookie;
 
+  @Value("${app.cookie.secure:false}")
+  private boolean secureCookie;
+
   public String getJwtFromCookies(HttpServletRequest request) {
     Cookie cookie = WebUtils.getCookie(request, jwtCookie);
     if (cookie != null) {
@@ -50,7 +53,8 @@ public class JwtUtils {
         .path("/")
         .maxAge(24 * 60 * 60)
         .httpOnly(true)
-        .sameSite("Lax")
+        .secure(secureCookie)
+        .sameSite(secureCookie ? "None" : "Lax")
         .build();
     return cookie;
   }
@@ -60,7 +64,8 @@ public class JwtUtils {
         .path("/")
         .maxAge(0)
         .httpOnly(true)
-        .sameSite("Lax")
+        .secure(secureCookie)
+        .sameSite(secureCookie ? "None" : "Lax")
         .build();
     return cookie;
   }
