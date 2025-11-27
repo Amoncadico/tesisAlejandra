@@ -102,6 +102,8 @@ public class WebSecurityConfig {
               .requestMatchers("/api/item/**").permitAll()
               .requestMatchers("/api/registro/**").permitAll()
               .requestMatchers("/api/rutina/**").permitAll()
+              .requestMatchers("/api/foros/**").permitAll()
+              .requestMatchers("/ws/**").permitAll()
               .anyRequest().authenticated()
         );
     

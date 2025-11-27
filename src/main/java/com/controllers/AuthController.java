@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.models.ERole;
+import com.models.Foro;
 import com.models.Role;
 import com.models.User;
 import com.payload.request.CreatePatientRequest;
@@ -27,6 +28,7 @@ import com.payload.request.LoginRequest;
 import com.payload.request.SignupRequest;
 import com.payload.response.MessageResponse;
 import com.payload.response.UserInfoResponse;
+import com.repository.ForoRepository;
 import com.repository.RoleRepository;
 import com.repository.UserRepository;
 import com.security.jwt.JwtUtils;
@@ -45,6 +47,9 @@ public class AuthController {
 
   @Autowired
   RoleRepository roleRepository;
+
+  @Autowired
+  ForoRepository foroRepository;
 
   @Autowired
   PasswordEncoder encoder;
@@ -175,9 +180,13 @@ public class AuthController {
     patient.setProfesionalAsignado(profesional);
 
     // Guardar el paciente
-    userRepository.save(patient);
+    User patientGuardado = userRepository.save(patient);
 
-    return ResponseEntity.ok(new MessageResponse("Patient profile created successfully and assigned to professional!"));
+    // Crear automáticamente el foro entre el profesional y el paciente
+    Foro foro = new Foro(profesional, patientGuardado);
+    foroRepository.save(foro);
+
+    return ResponseEntity.ok(new MessageResponse("Patient profile and forum created successfully!"));
   }
 
   @PostMapping("/signout")
