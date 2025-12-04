@@ -55,11 +55,11 @@ public class RegistroController {
                     if (registroActualizado.getFecha() != null) {
                         registro.setFecha(registroActualizado.getFecha());
                     }
-                    registro.setCompletado(registroActualizado.getCompletado());
+                    
+                    registro.setRealizardo(registroActualizado.getRealizardo());
+                    registro.setIntencidad(registroActualizado.getIntencidad());
+                    registro.setMolestias(registroActualizado.getMolestias());
 
-                    if (registroActualizado.getNivelDificultad() != null && !registroActualizado.getNivelDificultad().isEmpty()) {
-                        registro.setNivelDificultad(registroActualizado.getNivelDificultad());
-                    }
                     if (registroActualizado.getObservaciones() != null && !registroActualizado.getObservaciones().isEmpty()) {
                         registro.setObservaciones(registroActualizado.getObservaciones());
                     }

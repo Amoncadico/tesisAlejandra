@@ -45,11 +45,7 @@ public class Item {
     public Item() {
     }
 
-    public Item(int series, int repeticiones, Duration duracion, String observaciones, Ejercicio ejercicio, Rutina rutina) {
-        this.series = series;
-        this.repeticiones = repeticiones;
-        this.duracion = duracion;
-        this.observaciones = observaciones;
+    public Item(Ejercicio ejercicio, Rutina rutina) {
         this.ejercicio = ejercicio;
         this.rutina = rutina;
     }

@@ -70,12 +70,9 @@ public class ItemController {
         return itemRepository.findById(id)
                 .map(item -> {
 
-                    if (itemActualizado.getSeries() > 0) {
-                        item.setSeries(itemActualizado.getSeries());
-                    }
-                    if (itemActualizado.getRepeticiones() > 0) {
-                        item.setRepeticiones(itemActualizado.getRepeticiones());
-                    }
+                    item.setSeries(itemActualizado.getSeries());
+                    item.setRepeticiones(itemActualizado.getRepeticiones());
+                    
                     if (itemActualizado.getDuracion() != null) {
                         item.setDuracion(itemActualizado.getDuracion());
                     }

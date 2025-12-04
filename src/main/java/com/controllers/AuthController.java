@@ -1,5 +1,6 @@
 package com.controllers;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -76,7 +77,6 @@ public class AuthController {
     return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
         .body(new UserInfoResponse(userDetails.getId(),
                                    userDetails.getUsername(),
-                                   userDetails.getEmail(),
                                    roles));
   }
 
@@ -86,13 +86,8 @@ public class AuthController {
       return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
     }
 
-    if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-      return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
-    }
-
     // Create new user's account
     User user = new User(signUpRequest.getUsername(),
-                         signUpRequest.getEmail(),
                          encoder.encode(signUpRequest.getPassword()));
 
     Set<String> strRoles = signUpRequest.getRole();
@@ -156,18 +151,28 @@ public class AuthController {
           .body(new MessageResponse("Error: Username is already taken!"));
     }
 
-    // Verificar que el email no esté en uso
-    if (userRepository.existsByEmail(createPatientRequest.getEmail())) {
-      return ResponseEntity.badRequest()
-          .body(new MessageResponse("Error: Email is already in use!"));
-    }
+    // Extraer el RUT sin puntos y sin dígito verificador para la contraseña
+    String rutSinFormato = createPatientRequest.getRut()
+        .replace(".", "")
+        .replace("-", "");
+    // Remover el último dígito (dígito verificador)
+    String password = rutSinFormato.substring(0, rutSinFormato.length() - 1);
 
     // Crear el nuevo paciente
     User patient = new User(
         createPatientRequest.getUsername(),
-        createPatientRequest.getEmail(),
-        encoder.encode(createPatientRequest.getPassword())
+        encoder.encode(password)
     );
+    
+    patient.setRut(createPatientRequest.getRut());
+    patient.setLesion(createPatientRequest.getLesion());
+    patient.setFechaNacimiento(createPatientRequest.getFechaNacimiento());
+    
+    if (createPatientRequest.getFoto() != null) {
+        patient.setFoto(createPatientRequest.getFoto());
+    }
+    
+    patient.setFechaRegistro(LocalDate.now());
 
     // Asignar el rol de paciente
     Role patientRole = roleRepository.findByName(ERole.ROLE_PACIENTE)

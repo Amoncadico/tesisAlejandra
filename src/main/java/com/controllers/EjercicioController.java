@@ -55,20 +55,14 @@ public class EjercicioController {
                     if (ejercicioActualizado.getNombre() != null && !ejercicioActualizado.getNombre().isEmpty()) {
                         ejercicio.setNombre(ejercicioActualizado.getNombre());
                     }
-                    if (ejercicioActualizado.getZona() != null && !ejercicioActualizado.getZona().isEmpty()) {
-                        ejercicio.setZona(ejercicioActualizado.getZona());
-                    }
-                    if (ejercicioActualizado.getCategoria() != null && !ejercicioActualizado.getCategoria().isEmpty()) {
-                        ejercicio.setCategoria(ejercicioActualizado.getCategoria());
-                    }
-                    if (ejercicioActualizado.getDificultad() != null && !ejercicioActualizado.getDificultad().isEmpty()) {
-                        ejercicio.setDificultad(ejercicioActualizado.getDificultad());
-                    }
                     if (ejercicioActualizado.getDescripcion() != null && !ejercicioActualizado.getDescripcion().isEmpty()) {
                         ejercicio.setDescripcion(ejercicioActualizado.getDescripcion());
                     }
-                    if (ejercicioActualizado.getUrl() != null && !ejercicioActualizado.getUrl().isEmpty()) {
-                        ejercicio.setUrl(ejercicioActualizado.getUrl());
+                    if (ejercicioActualizado.getVideo() != null && !ejercicioActualizado.getVideo().isEmpty()) {
+                        ejercicio.setVideo(ejercicioActualizado.getVideo());
+                    }
+                    if (ejercicioActualizado.getImagen() != null && !ejercicioActualizado.getImagen().isEmpty()) {
+                        ejercicio.setImagen(ejercicioActualizado.getImagen());
                     }
 
                     Ejercicio actualizado = ejercicioRepository.save(ejercicio);

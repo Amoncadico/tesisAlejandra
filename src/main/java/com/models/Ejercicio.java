@@ -26,20 +26,14 @@ public class Ejercicio {
     @Column(name = "nombre")
     private String nombre;
 
-    @Column(name = "zona")
-    private String zona;
-
-    @Column(name = "categoria")
-    private String categoria;
-
-    @Column(name = "dificultad")
-    private String dificultad;
-
     @Column(name = "descripcion")
     private String descripcion;
 
-    @Column(name = "url")
-    private String url;
+    @Column(name = "video")
+    private String video;
+
+    @Column(name = "imagen")
+    private String imagen;
     
     @OneToMany(mappedBy = "ejercicio", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
@@ -48,13 +42,11 @@ public class Ejercicio {
     public Ejercicio() {
     }
 
-    public Ejercicio(String nombre, String zona, String categoria, String dificultad, String descripcion, String url) {
+    public Ejercicio(String nombre, String descripcion, String video, String imagen) {
         this.nombre = nombre;
-        this.zona = zona;
-        this.categoria = categoria;
-        this.dificultad = dificultad;
         this.descripcion = descripcion;
-        this.url = url;
+        this.video = video;
+        this.imagen = imagen;
     }
 
     public Long getId() {
@@ -73,30 +65,6 @@ public class Ejercicio {
         this.nombre = nombre;
     }
 
-    public String getZona() {
-        return zona;
-    }
-
-    public void setZona(String zona) {
-        this.zona = zona;
-    }
-
-    public String getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
-    }
-
-    public String getDificultad() {
-        return dificultad;
-    }
-
-    public void setDificultad(String dificultad) {
-        this.dificultad = dificultad;
-    }
-
     public String getDescripcion() {
         return descripcion;
     }
@@ -105,12 +73,20 @@ public class Ejercicio {
         this.descripcion = descripcion;
     }
 
-    public String getUrl() {
-        return url;
+    public String getVideo() {
+        return video;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setVideo(String video) {
+        this.video = video;
+    }
+
+    public String getImagen() {
+        return imagen;
+    }
+
+    public void setImagen(String imagen) {
+        this.imagen = imagen;
     }
 
     public List<Item> getItems() {

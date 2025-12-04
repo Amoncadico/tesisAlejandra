@@ -1,10 +1,13 @@
 package com.models;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -23,6 +26,9 @@ public class Rutina {
 
     @Column(name = "nombre")
     private String nombre;
+       
+    @Column(name = "descripcion")
+    private String descripcion;
 
     @Column(name = "fecha_creacion")
     private Date fechaCreacion;
@@ -41,12 +47,14 @@ public class Rutina {
     @JoinColumn(name = "paciente")
     private User paciente;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "dia")
+    private Set<EDiaSemana> diasSemana = new HashSet<>();
+
     public Rutina() {
     }
 
-    public Rutina(String nombre, Date fechaCreacion, Set<Registro> registros, Set<Item> items, User profesional, User paciente) {
-        this.nombre = nombre;
-        this.fechaCreacion = fechaCreacion;
+    public Rutina(Set<Registro> registros, Set<Item> items, User profesional, User paciente) {
         this.registros = registros;
         this.items = items;
         this.profesional = profesional;
@@ -104,5 +112,21 @@ public class Rutina {
 
     public void setPaciente(User paciente) {
         this.paciente = paciente;
+    }
+
+    public Set<EDiaSemana> getDiasSemana() {
+        return diasSemana;
+    }
+
+    public void setDiasSemana(Set<EDiaSemana> diasSemana) {
+        this.diasSemana = diasSemana;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
     }
 }

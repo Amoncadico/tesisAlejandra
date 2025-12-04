@@ -24,14 +24,17 @@ public class Registro {
     @Column(name = "fecha")
     private Date fecha;
 
-    @Column(name = "completado")
-    private boolean completado;
-
-    @Column(name = "nivel_dificultad")
-    private String nivelDificultad;
-
     @Column(name = "observaciones")
     private String observaciones;
+
+    @Column(name = "realizardo")
+    private int realizardo; // 1 al 5 escala de cumplimiento
+
+    @Column(name = "intencidad")
+    private int intencidad; // 1 al 5 escala de intensidad
+
+    @Column(name = "molestias")
+    private int molestias; // 1 al 5 escala de molestias
 
     @ManyToOne
     @JoinColumn(name = "rutina")
@@ -41,11 +44,12 @@ public class Registro {
     public Registro() {
     }
 
-    public Registro(Date fecha, boolean completado, String nivelDificultad, String observaciones, Rutina rutina) {
+    public Registro(Date fecha, String observaciones, int realizardo, int intencidad, int molestias, Rutina rutina) {
         this.fecha = fecha;
-        this.completado = completado;
-        this.nivelDificultad = nivelDificultad;
         this.observaciones = observaciones;
+        this.realizardo = realizardo;
+        this.intencidad = intencidad;
+        this.molestias = molestias;
         this.rutina = rutina;
     }
 
@@ -65,28 +69,36 @@ public class Registro {
         this.fecha = fecha;
     }
 
-    public boolean getCompletado() {
-        return completado;
-    }
-
-    public void setCompletado(boolean completado) {
-        this.completado = completado;
-    }
-
-    public String getNivelDificultad() {
-        return nivelDificultad;
-    }
-
-    public void setNivelDificultad(String nivelDificultad) {
-        this.nivelDificultad = nivelDificultad;
-    }
-
     public String getObservaciones() {
         return observaciones;
     }
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public int getRealizardo() {
+        return realizardo;
+    }
+
+    public void setRealizardo(int realizardo) {
+        this.realizardo = realizardo;
+    }
+
+    public int getIntencidad() {
+        return intencidad;
+    }
+
+    public void setIntencidad(int intencidad) {
+        this.intencidad = intencidad;
+    }
+
+    public int getMolestias() {
+        return molestias;
+    }
+
+    public void setMolestias(int molestias) {
+        this.molestias = molestias;
     }
 
     public Rutina getRutina() {

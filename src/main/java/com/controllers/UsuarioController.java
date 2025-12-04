@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,8 +19,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dto.UserProfileDTO;
 import com.models.User;
 import com.repository.UserRepository;
+import com.security.services.UserDetailsImpl;
 
 @CrossOrigin(origins = "http://localhost:4200", maxAge = 3600, allowCredentials="true")
 @RestController
@@ -39,6 +43,39 @@ public class UsuarioController {
     public ResponseEntity<List<User>> listarUsuarios() {
         List<User> usuarios = userRepository.findAll();
         return new ResponseEntity<>(usuarios, HttpStatus.OK);
+    }
+
+    @GetMapping("/pacientePerfil")
+    @PreAuthorize("hasAuthority('ROLE_PACIENTE') or hasAuthority('ROLE_PROFESIONAL') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<UserProfileDTO> getPacienteAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        
+        Optional<User> usuarioOptional = userRepository.findById(userDetails.getId());
+
+        if (usuarioOptional.isPresent()) {
+            User usuario = usuarioOptional.get();
+            
+            String profesionalUsername = null;
+            if (usuario.getProfesionalAsignado() != null) {
+                profesionalUsername = usuario.getProfesionalAsignado().getUsername();
+            }
+            
+            UserProfileDTO dto = new UserProfileDTO(
+                usuario.getId(),
+                usuario.getUsername(),
+                usuario.getRut(),
+                usuario.getFechaNacimiento(),
+                usuario.getLesion(),
+                usuario.getFechaRegistro(),
+                usuario.getFoto(),
+                profesionalUsername
+            );
+            
+            return new ResponseEntity<>(dto, HttpStatus.OK);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/{userId}")
@@ -79,10 +116,24 @@ public class UsuarioController {
             User usuario = usuarioOptional.get();
 
             // Actualizar los campos relevantes del usuario con la información proporcionada en usuarioActualizado
-            if(usuarioActualizado.getUsername() != "")usuario.setUsername(usuarioActualizado.getUsername());
-            if(usuarioActualizado.getEmail() != "")usuario.setEmail(usuarioActualizado.getEmail());
-            if(usuarioActualizado.getPassword() != "")usuario.setPassword(encoder.encode(usuarioActualizado.getPassword()));
-            // Puedes continuar actualizando otros campos según sea necesario
+            if(usuarioActualizado.getUsername() != null && !usuarioActualizado.getUsername().isEmpty()) {
+                usuario.setUsername(usuarioActualizado.getUsername());
+            }
+            if(usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isEmpty()) {
+                usuario.setPassword(encoder.encode(usuarioActualizado.getPassword()));
+            }
+            if(usuarioActualizado.getRut() != null) {
+                usuario.setRut(usuarioActualizado.getRut());
+            }
+            if(usuarioActualizado.getLesion() != null) {
+                usuario.setLesion(usuarioActualizado.getLesion());
+            }
+            if(usuarioActualizado.getFechaNacimiento() != null) {
+                usuario.setFechaNacimiento(usuarioActualizado.getFechaNacimiento());
+            }
+            if(usuarioActualizado.getFoto() != null) {
+                usuario.setFoto(usuarioActualizado.getFoto());
+            }
             
             // Guardar el usuario actualizado
             userRepository.save(usuario);
