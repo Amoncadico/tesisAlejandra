@@ -1,6 +1,8 @@
 package com.controllers;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dto.CrearRutinaRequest;
 import com.dto.RutinaResponseDTO;
+import com.models.EDiaSemana;
 import com.models.Ejercicio;
 import com.models.Item;
 import com.models.Rutina;
@@ -86,6 +89,41 @@ public class RutinaController {
         }
         
         return ResponseEntity.ok(rutinasDTO);
+    }
+
+    @GetMapping("/pacienteRutinaHoy")
+    @PreAuthorize("hasAuthority('ROLE_PACIENTE')")
+    public ResponseEntity<?> miRutinaHoy(Authentication authentication) {
+        try {
+            // Obtener el paciente autenticado
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Long pacienteId = userDetails.getId();
+            
+            // Obtener el día de la semana actual
+            LocalDate hoy = LocalDate.now();
+            DayOfWeek diaActual = hoy.getDayOfWeek();
+            
+            // Convertir DayOfWeek a EDiaSemana
+            EDiaSemana diaSemana = convertirDayOfWeekAEDiaSemana(diaActual);
+            
+            // Buscar rutinas del paciente
+            List<Rutina> rutinas = rutinaRepository.findByPacienteId(pacienteId);
+            
+            // Buscar la rutina que contenga el día actual
+            for (Rutina rutina : rutinas) {
+                if (rutina.getDiasSemana() != null && rutina.getDiasSemana().contains(diaSemana)) {
+                    RutinaResponseDTO dto = mapearRutinaADTO(rutina);
+                    return ResponseEntity.ok(dto);
+                }
+            }
+            
+            // Si no hay rutina para hoy
+            return ResponseEntity.ok(new MessageResponse("No hay rutina asignada para el día de hoy"));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error al obtener la rutina: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/crear")
@@ -243,6 +281,9 @@ public class RutinaController {
                 if (item.getEjercicio() != null) {
                     itemDTO.setEjercicioId(item.getEjercicio().getId());
                     itemDTO.setEjercicioNombre(item.getEjercicio().getNombre());
+                    itemDTO.setEjercicioDescripcion(item.getEjercicio().getDescripcion());
+                    itemDTO.setEjercicioVideo(item.getEjercicio().getVideo());
+                    itemDTO.setEjercicioImagen(item.getEjercicio().getImagen());
                 }
                 itemDTO.setSeries(item.getSeries());
                 itemDTO.setRepeticiones(item.getRepeticiones());
@@ -254,6 +295,28 @@ public class RutinaController {
         }
         
         return dto;
+    }
+
+    // Método helper para convertir DayOfWeek a EDiaSemana
+    private EDiaSemana convertirDayOfWeekAEDiaSemana(DayOfWeek dayOfWeek) {
+        switch (dayOfWeek) {
+            case MONDAY:
+                return EDiaSemana.LUNES;
+            case TUESDAY:
+                return EDiaSemana.MARTES;
+            case WEDNESDAY:
+                return EDiaSemana.MIERCOLES;
+            case THURSDAY:
+                return EDiaSemana.JUEVES;
+            case FRIDAY:
+                return EDiaSemana.VIERNES;
+            case SATURDAY:
+                return EDiaSemana.SABADO;
+            case SUNDAY:
+                return EDiaSemana.DOMINGO;
+            default:
+                throw new IllegalArgumentException("Día de la semana no válido: " + dayOfWeek);
+        }
     }
 
 }

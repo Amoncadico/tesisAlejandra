@@ -80,6 +80,34 @@ public class UsuarioController {
         }
     }
 
+    @GetMapping("/profesionalPerfil")
+    @PreAuthorize("hasAuthority('ROLE_PROFESIONAL') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<UserProfileDTO> getProfesionalAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        
+        Optional<User> usuarioOptional = userRepository.findById(userDetails.getId());
+
+        if (usuarioOptional.isPresent()) {
+            User usuario = usuarioOptional.get();
+            
+            UserProfileDTO dto = new UserProfileDTO(
+                usuario.getId(),
+                usuario.getUsername(),
+                usuario.getRut(),
+                usuario.getFechaNacimiento(),
+                usuario.getLesion(),
+                usuario.getFechaRegistro(),
+                usuario.getFoto(),
+                null // Profesional no tiene profesional asignado
+            );
+            
+            return new ResponseEntity<>(dto, HttpStatus.OK);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/mis-pacientes")
     @PreAuthorize("hasAuthority('ROLE_PROFESIONAL') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<UserProfileDTO>> getMisPacientes() {

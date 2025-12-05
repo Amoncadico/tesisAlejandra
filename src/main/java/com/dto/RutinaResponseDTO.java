@@ -122,6 +122,9 @@ public class RutinaResponseDTO {
         private Long id;
         private Long ejercicioId;
         private String ejercicioNombre;
+        private String ejercicioDescripcion;
+        private String ejercicioVideo;
+        private String ejercicioImagen;
         private Integer series;
         private Integer repeticiones;
         private Long duracionSegundos;
@@ -131,11 +134,15 @@ public class RutinaResponseDTO {
         }
 
         public ItemResponseDTO(Long id, Long ejercicioId, String ejercicioNombre, 
+                              String ejercicioDescripcion, String ejercicioVideo, String ejercicioImagen,
                               Integer series, Integer repeticiones, Long duracionSegundos, 
                               String observaciones) {
             this.id = id;
             this.ejercicioId = ejercicioId;
             this.ejercicioNombre = ejercicioNombre;
+            this.ejercicioDescripcion = ejercicioDescripcion;
+            this.ejercicioVideo = ejercicioVideo;
+            this.ejercicioImagen = ejercicioImagen;
             this.series = series;
             this.repeticiones = repeticiones;
             this.duracionSegundos = duracionSegundos;
@@ -165,6 +172,30 @@ public class RutinaResponseDTO {
 
         public void setEjercicioNombre(String ejercicioNombre) {
             this.ejercicioNombre = ejercicioNombre;
+        }
+
+        public String getEjercicioDescripcion() {
+            return ejercicioDescripcion;
+        }
+
+        public void setEjercicioDescripcion(String ejercicioDescripcion) {
+            this.ejercicioDescripcion = ejercicioDescripcion;
+        }
+
+        public String getEjercicioVideo() {
+            return ejercicioVideo;
+        }
+
+        public void setEjercicioVideo(String ejercicioVideo) {
+            this.ejercicioVideo = ejercicioVideo;
+        }
+
+        public String getEjercicioImagen() {
+            return ejercicioImagen;
+        }
+
+        public void setEjercicioImagen(String ejercicioImagen) {
+            this.ejercicioImagen = ejercicioImagen;
         }
 
         public Integer getSeries() {
