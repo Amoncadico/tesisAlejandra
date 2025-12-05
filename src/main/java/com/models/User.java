@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -54,9 +56,11 @@ public class User {
   private String foto;
 
   @OneToMany(mappedBy = "profesional")
+  @JsonIgnore
   private Set<Rutina> rutinasCreadas;
 
   @OneToMany(mappedBy = "paciente")
+  @JsonIgnore
   private Set<Rutina> rutinasAsignadas;
 
 
@@ -68,9 +72,11 @@ public class User {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "profesional_id")
+  @JsonIgnore
   private User profesionalAsignado;
 
   @OneToMany(mappedBy = "profesionalAsignado", fetch = FetchType.LAZY)
+  @JsonIgnore
   private Set<User> pacientesAsignados = new HashSet<>();
 
   public User() {

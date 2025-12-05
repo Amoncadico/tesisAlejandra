@@ -1,7 +1,9 @@
 package com.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -78,8 +80,41 @@ public class UsuarioController {
         }
     }
 
+    @GetMapping("/mis-pacientes")
+    @PreAuthorize("hasAuthority('ROLE_PROFESIONAL') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<List<UserProfileDTO>> getMisPacientes() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        
+        Optional<User> profesionalOptional = userRepository.findById(userDetails.getId());
+
+        if (profesionalOptional.isPresent()) {
+            User profesional = profesionalOptional.get();
+            Set<User> pacientes = profesional.getPacientesAsignados();
+            
+            List<UserProfileDTO> pacientesDTO = new ArrayList<>();
+            
+            for (User paciente : pacientes) {
+                UserProfileDTO dto = new UserProfileDTO(
+                    paciente.getId(),
+                    paciente.getUsername(),
+                    paciente.getRut(),
+                    paciente.getFechaNacimiento(),
+                    paciente.getLesion(),
+                    paciente.getFechaRegistro(),
+                    paciente.getFoto(),
+                    profesional.getUsername() // El profesional autenticado
+                );
+                pacientesDTO.add(dto);
+            }
+            
+            return new ResponseEntity<>(pacientesDTO, HttpStatus.OK);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('EVALUADOR') or hasRole('VISADOR') or hasRole('ADMIN')")
     public ResponseEntity<User> getUsuario(@PathVariable Long userId) {
         Optional<User> usuarioOptional = userRepository.findById(userId);
 
@@ -144,4 +179,5 @@ public class UsuarioController {
         }
 
     }
+
 }

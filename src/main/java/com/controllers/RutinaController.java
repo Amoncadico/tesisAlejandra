@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dto.CrearRutinaRequest;
+import com.dto.RutinaResponseDTO;
 import com.models.Ejercicio;
 import com.models.Item;
 import com.models.Rutina;
@@ -51,19 +53,43 @@ public class RutinaController {
     }
 
     @GetMapping("/listar")
-    public ResponseEntity<List<Rutina>> listarRutinas() {
+    public ResponseEntity<List<RutinaResponseDTO>> listarRutinas() {
         List<Rutina> rutinas = rutinaRepository.findAll();
-        return ResponseEntity.ok(rutinas);
+        List<RutinaResponseDTO> rutinasDTO = new java.util.ArrayList<>();
+        
+        for (Rutina rutina : rutinas) {
+            RutinaResponseDTO dto = mapearRutinaADTO(rutina);
+            rutinasDTO.add(dto);
+        }
+        
+        return ResponseEntity.ok(rutinasDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Rutina> rutinaPorId(@PathVariable Long id) {
+    public ResponseEntity<RutinaResponseDTO> rutinaPorId(@PathVariable Long id) {
         Rutina rutina = rutinaRepository.findById(id).orElse(null);
-        return rutina != null ?
-                        ResponseEntity.ok(rutina) : ResponseEntity.notFound().build();
+        if (rutina != null) {
+            RutinaResponseDTO dto = mapearRutinaADTO(rutina);
+            return ResponseEntity.ok(dto);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/paciente/{pacienteId}")
+    public ResponseEntity<List<RutinaResponseDTO>> rutinasPorPaciente(@PathVariable Long pacienteId) {
+        List<Rutina> rutinas = rutinaRepository.findByPacienteId(pacienteId);
+        List<RutinaResponseDTO> rutinasDTO = new java.util.ArrayList<>();
+        
+        for (Rutina rutina : rutinas) {
+            RutinaResponseDTO dto = mapearRutinaADTO(rutina);
+            rutinasDTO.add(dto);
+        }
+        
+        return ResponseEntity.ok(rutinasDTO);
     }
 
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('ROLE_PROFESIONAL') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> crearRutinaCompleta(@Valid @RequestBody CrearRutinaRequest request, Authentication authentication) {
         try {
             // Obtener el usuario autenticado (profesional)
@@ -101,12 +127,19 @@ public class RutinaController {
                     Item item = new Item();
                     item.setEjercicio(ejercicio);
                     item.setRutina(rutinaSaved);
-                    item.setSeries(itemReq.getSeries());
-                    item.setRepeticiones(itemReq.getRepeticiones());
                     
-                    // Convertir segundos a Duration si existe
+                    // Si tiene duración en segundos, es un ejercicio por tiempo
                     if (itemReq.getDuracionSegundos() != null && itemReq.getDuracionSegundos() > 0) {
                         item.setDuracion(Duration.ofSeconds(itemReq.getDuracionSegundos()));
+                        // Series y repeticiones quedan en 0 o por defecto
+                        item.setSeries(0);
+                        item.setRepeticiones(0);
+                    } else {
+                        // Es un ejercicio por series y repeticiones
+                        item.setSeries(itemReq.getSeries() != null ? itemReq.getSeries() : 0);
+                        item.setRepeticiones(itemReq.getRepeticiones() != null ? itemReq.getRepeticiones() : 0);
+                        // Duración queda null
+                        item.setDuracion(null);
                     }
                     
                     if (itemReq.getObservaciones() != null && !itemReq.getObservaciones().isEmpty()) {
@@ -120,7 +153,10 @@ public class RutinaController {
             // Recargar la rutina con los items
             Rutina rutinaCompleta = rutinaRepository.findById(rutinaSaved.getId()).orElse(rutinaSaved);
             
-            return ResponseEntity.ok(rutinaCompleta);
+            // Mapear a DTO para evitar referencias circulares
+            RutinaResponseDTO responseDTO = mapearRutinaADTO(rutinaCompleta);
+            
+            return ResponseEntity.ok(responseDTO);
             
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
@@ -132,7 +168,7 @@ public class RutinaController {
     }
 
     @PutMapping("update/{id}")
-    public ResponseEntity<Rutina> actualizarRutina(@PathVariable Long id, @RequestBody Rutina rutinaActualizada) {
+    public ResponseEntity<RutinaResponseDTO> actualizarRutina(@PathVariable Long id, @RequestBody Rutina rutinaActualizada) {
         return rutinaRepository.findById(id)
                 .map(rutina -> {
 
@@ -162,7 +198,8 @@ public class RutinaController {
                     }
 
                     Rutina actualizada = rutinaRepository.save(rutina);
-                    return ResponseEntity.ok(actualizada);
+                    RutinaResponseDTO dto = mapearRutinaADTO(actualizada);
+                    return ResponseEntity.ok(dto);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -175,6 +212,48 @@ public class RutinaController {
         }
         rutinaRepository.delete(rutina);
         return ResponseEntity.noContent().build();
+    }
+
+    // Método helper para mapear Rutina a DTO
+    private RutinaResponseDTO mapearRutinaADTO(Rutina rutina) {
+        RutinaResponseDTO dto = new RutinaResponseDTO();
+        dto.setId(rutina.getId());
+        dto.setNombre(rutina.getNombre());
+        dto.setDescripcion(rutina.getDescripcion());
+        dto.setFechaCreacion(rutina.getFechaCreacion());
+        dto.setDiasSemana(rutina.getDiasSemana());
+        
+        // Mapear profesional y paciente de forma segura
+        if (rutina.getProfesional() != null) {
+            dto.setProfesionalId(rutina.getProfesional().getId());
+            dto.setProfesionalUsername(rutina.getProfesional().getUsername());
+        }
+        
+        if (rutina.getPaciente() != null) {
+            dto.setPacienteId(rutina.getPaciente().getId());
+            dto.setPacienteUsername(rutina.getPaciente().getUsername());
+        }
+        
+        // Mapear items
+        if (rutina.getItems() != null && !rutina.getItems().isEmpty()) {
+            java.util.List<RutinaResponseDTO.ItemResponseDTO> itemsDTO = new java.util.ArrayList<>();
+            for (Item item : rutina.getItems()) {
+                RutinaResponseDTO.ItemResponseDTO itemDTO = new RutinaResponseDTO.ItemResponseDTO();
+                itemDTO.setId(item.getId());
+                if (item.getEjercicio() != null) {
+                    itemDTO.setEjercicioId(item.getEjercicio().getId());
+                    itemDTO.setEjercicioNombre(item.getEjercicio().getNombre());
+                }
+                itemDTO.setSeries(item.getSeries());
+                itemDTO.setRepeticiones(item.getRepeticiones());
+                itemDTO.setDuracionSegundos(item.getDuracion() != null ? item.getDuracion().getSeconds() : null);
+                itemDTO.setObservaciones(item.getObservaciones());
+                itemsDTO.add(itemDTO);
+            }
+            dto.setItems(itemsDTO);
+        }
+        
+        return dto;
     }
 
 }

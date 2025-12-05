@@ -5,12 +5,10 @@ import java.util.Set;
 
 import com.models.EDiaSemana;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class CrearRutinaRequest {
     
-    @NotBlank
     private String nombre;
     
     private String descripcion;
@@ -66,8 +64,8 @@ public class CrearRutinaRequest {
         @NotNull
         private Long ejercicioId;
         
-        private int series;
-        private int repeticiones;
+        private Integer series;
+        private Integer repeticiones;
         private Long duracionSegundos; // Duración en segundos
         private String observaciones;
 
@@ -79,19 +77,19 @@ public class CrearRutinaRequest {
             this.ejercicioId = ejercicioId;
         }
 
-        public int getSeries() {
+        public Integer getSeries() {
             return series;
         }
 
-        public void setSeries(int series) {
+        public void setSeries(Integer series) {
             this.series = series;
         }
 
-        public int getRepeticiones() {
+        public Integer getRepeticiones() {
             return repeticiones;
         }
 
-        public void setRepeticiones(int repeticiones) {
+        public void setRepeticiones(Integer repeticiones) {
             this.repeticiones = repeticiones;
         }
 

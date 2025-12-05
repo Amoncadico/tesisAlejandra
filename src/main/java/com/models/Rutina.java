@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -34,6 +36,7 @@ public class Rutina {
     private Date fechaCreacion;
 
     @OneToMany(mappedBy = "rutina")
+    @JsonIgnore
     private Set<Registro> registros;
 
     @OneToMany(mappedBy = "rutina")
@@ -41,10 +44,12 @@ public class Rutina {
 
     @ManyToOne
     @JoinColumn(name = "profesional")
+    @JsonIgnore
     private User profesional;
 
     @ManyToOne
     @JoinColumn(name = "paciente")
+    @JsonIgnore
     private User paciente;
 
     @Enumerated(EnumType.STRING)

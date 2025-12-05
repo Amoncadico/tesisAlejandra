@@ -1,6 +1,8 @@
 package com.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dto.ForoDTO;
 import com.dto.MensajeDTO;
+import com.dto.ProfesionalPacientesPhotosDTO;
+import com.dto.UserPhotoDTO;
+import com.models.Foro;
+import com.models.User;
 import com.payload.response.MessageResponse;
+import com.repository.ForoRepository;
+import com.repository.UserRepository;
 import com.security.services.UserDetailsImpl;
 import com.services.ForoService;
 
@@ -25,6 +33,12 @@ public class ForoController {
 
     @Autowired
     private ForoService foroService;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private ForoRepository foroRepository;
     
     @PostMapping("/crear")
     @PreAuthorize("hasAuthority('ROLE_PROFESIONAL') or hasAuthority('ROLE_ADMIN')")
@@ -96,6 +110,84 @@ public class ForoController {
                     .body(new MessageResponse("Error: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/fotosForoPaciente")
+    @PreAuthorize("hasAuthority('ROLE_PACIENTE')")
+    public ResponseEntity<?> obtenerFotosForoPaciente(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User paciente = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+            // Buscar el foro del paciente
+            Foro foro = foroRepository.findByPaciente(paciente)
+                .orElseThrow(() -> new RuntimeException("El paciente no tiene un foro asignado"));
+            
+            // Crear DTOs con las fotos
+            List<UserPhotoDTO> fotos = new ArrayList<>();
+            
+            // Foto del paciente
+            fotos.add(new UserPhotoDTO(
+                paciente.getId(),
+                paciente.getUsername(),
+                paciente.getFoto()
+            ));
+            
+            // Foto del profesional
+            User profesional = foro.getProfesional();
+            fotos.add(new UserPhotoDTO(
+                profesional.getId(),
+                profesional.getUsername(),
+                profesional.getFoto()
+            ));
+            
+            return ResponseEntity.ok(fotos);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/fotoProfesional")
+    @PreAuthorize("hasAuthority('ROLE_PROFESIONAL') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> obtenerFotosProfesionalPacientes(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User profesional = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+            // Foto del profesional
+            UserPhotoDTO fotoProfesional = new UserPhotoDTO(
+                profesional.getId(),
+                profesional.getUsername(),
+                profesional.getFoto()
+            );
+            
+            // Fotos de todos los pacientes asignados
+            Set<User> pacientes = profesional.getPacientesAsignados();
+            List<UserPhotoDTO> fotosPacientes = new ArrayList<>();
+            
+            for (User paciente : pacientes) {
+                fotosPacientes.add(new UserPhotoDTO(
+                    paciente.getId(),
+                    paciente.getUsername(),
+                    paciente.getFoto()
+                ));
+            }
+            
+            ProfesionalPacientesPhotosDTO response = new ProfesionalPacientesPhotosDTO(
+                fotoProfesional,
+                fotosPacientes
+            );
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    
 
     // Clase interna para el request de crear foro
     public static class CrearForoRequest {
