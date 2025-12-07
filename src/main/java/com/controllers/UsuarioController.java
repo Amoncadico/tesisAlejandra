@@ -52,17 +52,17 @@ public class UsuarioController {
     public ResponseEntity<UserProfileDTO> getPacienteAutenticado() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        
+
         Optional<User> usuarioOptional = userRepository.findById(userDetails.getId());
 
         if (usuarioOptional.isPresent()) {
             User usuario = usuarioOptional.get();
-            
+
             String profesionalUsername = null;
             if (usuario.getProfesionalAsignado() != null) {
                 profesionalUsername = usuario.getProfesionalAsignado().getUsername();
             }
-            
+
             UserProfileDTO dto = new UserProfileDTO(
                 usuario.getId(),
                 usuario.getUsername(),
@@ -71,9 +71,9 @@ public class UsuarioController {
                 usuario.getLesion(),
                 usuario.getFechaRegistro(),
                 usuario.getFoto(),
-                profesionalUsername
+                profesionalUsername,
+                null // cantidadPacientes no aplica para paciente
             );
-            
             return new ResponseEntity<>(dto, HttpStatus.OK);
         } else {
             return ResponseEntity.notFound().build();
@@ -85,12 +85,16 @@ public class UsuarioController {
     public ResponseEntity<UserProfileDTO> getProfesionalAutenticado() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        
+
         Optional<User> usuarioOptional = userRepository.findById(userDetails.getId());
 
         if (usuarioOptional.isPresent()) {
             User usuario = usuarioOptional.get();
-            
+            int cantidadPacientes = 0;
+            if (usuario.getPacientesAsignados() != null) {
+                cantidadPacientes = usuario.getPacientesAsignados().size();
+            }
+            // Se asume que UserProfileDTO tiene un campo extra para cantidadPacientes
             UserProfileDTO dto = new UserProfileDTO(
                 usuario.getId(),
                 usuario.getUsername(),
@@ -99,9 +103,9 @@ public class UsuarioController {
                 usuario.getLesion(),
                 usuario.getFechaRegistro(),
                 usuario.getFoto(),
-                null // Profesional no tiene profesional asignado
+                null, // Profesional no tiene profesional asignado
+                cantidadPacientes
             );
-            
             return new ResponseEntity<>(dto, HttpStatus.OK);
         } else {
             return ResponseEntity.notFound().build();
@@ -131,7 +135,8 @@ public class UsuarioController {
                     paciente.getLesion(),
                     paciente.getFechaRegistro(),
                     paciente.getFoto(),
-                    profesional.getUsername() // El profesional autenticado
+                    profesional.getUsername(), // El profesional autenticado
+                    null // cantidadPacientes no aplica para paciente
                 );
                 pacientesDTO.add(dto);
             }

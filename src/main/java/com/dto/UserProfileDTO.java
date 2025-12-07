@@ -11,12 +11,13 @@ public class UserProfileDTO {
     private LocalDate fechaRegistro;
     private String foto;
     private String profesionalAsignado; // username del profesional
+    private Integer cantidadPacientes;
 
     public UserProfileDTO() {
     }
 
-    public UserProfileDTO(Long id, String username, String rut, LocalDate fechaNacimiento, 
-                          String lesion, LocalDate fechaRegistro, String foto, String profesionalAsignado) {
+    public UserProfileDTO(Long id, String username, String rut, LocalDate fechaNacimiento,
+                          String lesion, LocalDate fechaRegistro, String foto, String profesionalAsignado, Integer cantidadPacientes) {
         this.id = id;
         this.username = username;
         this.rut = rut;
@@ -25,6 +26,7 @@ public class UserProfileDTO {
         this.fechaRegistro = fechaRegistro;
         this.foto = foto;
         this.profesionalAsignado = profesionalAsignado;
+        this.cantidadPacientes = cantidadPacientes;
     }
 
     public Long getId() {
@@ -89,5 +91,13 @@ public class UserProfileDTO {
 
     public void setProfesionalAsignado(String profesionalAsignado) {
         this.profesionalAsignado = profesionalAsignado;
+    }
+
+    public Integer getCantidadPacientes() {
+        return cantidadPacientes;
+    }
+
+    public void setCantidadPacientes(Integer cantidadPacientes) {
+        this.cantidadPacientes = cantidadPacientes;
     }
 }
