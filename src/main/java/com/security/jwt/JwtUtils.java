@@ -96,7 +96,7 @@ public class JwtUtils {
     return false;
   }
   
-  public String generateTokenFromUsername(String username) {   
+  public String generateTokenFromUsername(String username) {
     return Jwts.builder()
               .setSubject(username)
               .setIssuedAt(new Date())

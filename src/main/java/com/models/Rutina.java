@@ -1,12 +1,14 @@
 package com.models;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -33,7 +35,13 @@ public class Rutina {
     private String descripcion;
 
     @Column(name = "fecha_creacion")
-    private Date fechaCreacion;
+    private LocalDate fechaCreacion;
+
+    @Column(name = "fecha_inicio")
+    private LocalDate fechaInicio;
+
+    @Column(name = "fecha_fin")
+    private LocalDate fechaFin;
 
     @OneToMany(mappedBy = "rutina")
     @JsonIgnore
@@ -52,8 +60,10 @@ public class Rutina {
     @JsonIgnore
     private User paciente;
 
+    @ElementCollection(targetClass = EDiaSemana.class)
     @Enumerated(EnumType.STRING)
-    @Column(name = "dia")
+    @CollectionTable(name = "rutina_dias_semana", joinColumns = @JoinColumn(name = "rutina_id"))
+    @Column(name = "dia_semana")
     private Set<EDiaSemana> diasSemana = new HashSet<>();
 
     public Rutina() {
@@ -79,12 +89,28 @@ public class Rutina {
         this.nombre = nombre;
     }
 
-    public Date getFechaCreacion() {
+    public LocalDate getFechaCreacion() {
         return fechaCreacion;
     }
 
-    public void setFechaCreacion(Date fechaCreacion) {
+    public void setFechaCreacion(LocalDate fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDate getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public void setFechaInicio(LocalDate fechaInicio) {
+        this.fechaInicio = fechaInicio;
+    }
+
+    public LocalDate getFechaFin() {
+        return fechaFin;
+    }
+
+    public void setFechaFin(LocalDate fechaFin) {
+        this.fechaFin = fechaFin;
     }
 
     public Set<Registro> getRegistros() {

@@ -28,6 +28,12 @@ public class Foro {
     @JoinColumn(name = "paciente_id")
     private User paciente;
 
+    private boolean logroImpulso;
+
+    private boolean logroRitmo;
+
+    private boolean logroDominio;
+
     @OneToMany(mappedBy = "foro", cascade = CascadeType.ALL)
     private Set<Mensaje> mensajes;
 
@@ -36,6 +42,9 @@ public class Foro {
     public Foro(User profesional, User paciente) {
         this.profesional = profesional;
         this.paciente = paciente;
+        this.logroImpulso = false;
+        this.logroRitmo = false;
+        this.logroDominio = false;
     }
 
     public Long getId() {
@@ -56,6 +65,30 @@ public class Foro {
 
     public void setPaciente(User paciente) {
         this.paciente = paciente;
+    }
+
+    public boolean isLogroImpulso() {
+        return logroImpulso;
+    }
+
+    public boolean isLogroRitmo() {
+        return logroRitmo;
+    }
+
+    public boolean isLogroDominio() {
+        return logroDominio;
+    }
+
+    public void setLogroImpulso(boolean logroImpulso) {
+        this.logroImpulso = logroImpulso;
+    }
+
+    public void setLogroRitmo(boolean logroRitmo) {
+        this.logroRitmo = logroRitmo;
+    }
+
+    public void setLogroDominio(boolean logroDominio) {
+        this.logroDominio = logroDominio;
     }
 
     public Set<Mensaje> getMensajes() {

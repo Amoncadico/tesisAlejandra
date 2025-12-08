@@ -1,6 +1,6 @@
 package com.dto;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -11,7 +11,7 @@ public class RutinaResponseDTO {
     private Long id;
     private String nombre;
     private String descripcion;
-    private Date fechaCreacion;
+    private LocalDate fechaCreacion;
     private Set<EDiaSemana> diasSemana;
     private Long profesionalId;
     private String profesionalUsername;
@@ -22,7 +22,7 @@ public class RutinaResponseDTO {
     public RutinaResponseDTO() {
     }
 
-    public RutinaResponseDTO(Long id, String nombre, String descripcion, Date fechaCreacion, 
+    public RutinaResponseDTO(Long id, String nombre, String descripcion, LocalDate fechaCreacion,
                             Set<EDiaSemana> diasSemana, Long profesionalId, String profesionalUsername,
                             Long pacienteId, String pacienteUsername, List<ItemResponseDTO> items) {
         this.id = id;
@@ -62,11 +62,11 @@ public class RutinaResponseDTO {
         this.descripcion = descripcion;
     }
 
-    public Date getFechaCreacion() {
+    public LocalDate getFechaCreacion() {
         return fechaCreacion;
     }
 
-    public void setFechaCreacion(Date fechaCreacion) {
+    public void setFechaCreacion(LocalDate fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
 

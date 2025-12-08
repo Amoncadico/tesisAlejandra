@@ -3,7 +3,6 @@ package com.controllers;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -143,10 +142,12 @@ public class RutinaController {
             Rutina rutina = new Rutina();
             rutina.setNombre(request.getNombre());
             rutina.setDescripcion(request.getDescripcion());
-            rutina.setFechaCreacion(new Date());
+            rutina.setFechaCreacion(LocalDate.now());
             rutina.setProfesional(profesional);
             rutina.setPaciente(paciente);
-            
+            rutina.setFechaInicio(request.getFechaInicio());
+            rutina.setFechaFin(request.getFechaFin());
+
             if (request.getDiasSemana() != null && !request.getDiasSemana().isEmpty()) {
                 rutina.setDiasSemana(request.getDiasSemana());
             } else {

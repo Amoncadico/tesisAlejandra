@@ -45,7 +45,7 @@ public class User {
 
   @Column(name = "lesion")
   private String lesion;
-  
+
   @Column(name = "fecha_nacimiento")
   private LocalDate fechaNacimiento;
   
@@ -172,7 +172,7 @@ public class User {
   public void setFoto(String foto) {
     this.foto = foto;
   }
-
+  
   public Set<Rutina> getRutinasCreadas() {
     return rutinasCreadas;
   }

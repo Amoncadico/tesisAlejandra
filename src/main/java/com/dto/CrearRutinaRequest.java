@@ -1,5 +1,6 @@
 package com.dto;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -17,6 +18,9 @@ public class CrearRutinaRequest {
     private Long pacienteId;
     
     private Set<EDiaSemana> diasSemana;
+
+    private LocalDate fechaInicio;
+    private LocalDate fechaFin;
     
     private List<ItemRequest> items;
 
@@ -50,6 +54,22 @@ public class CrearRutinaRequest {
 
     public void setDiasSemana(Set<EDiaSemana> diasSemana) {
         this.diasSemana = diasSemana;
+    }
+
+    public LocalDate getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public void setFechaInicio(LocalDate fechaInicio) {
+        this.fechaInicio = fechaInicio;
+    }
+
+    public LocalDate getFechaFin() {
+        return fechaFin;
+    }
+
+    public void setFechaFin(LocalDate fechaFin) {
+        this.fechaFin = fechaFin;
     }
 
     public List<ItemRequest> getItems() {

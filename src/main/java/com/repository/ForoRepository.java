@@ -28,4 +28,7 @@ public interface ForoRepository extends JpaRepository<Foro, Long> {
     // Obtener todos los foros donde participa un usuario (como profesional o paciente)
     @Query("SELECT f FROM Foro f WHERE f.profesional = ?1 OR f.paciente = ?1")
     List<Foro> findByUsuario(User usuario);
+
+    // Encontrar el foro de un paciente por su ID
+    Optional<Foro> findByPacienteId(Long pacienteId);
 }
