@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dto.LogroMensajeDTO;
 import com.models.EDiaSemana;
 import com.models.Foro;
 import com.models.Rutina;
@@ -37,20 +38,47 @@ public class LogrosController {
         this.registroRepository = registroRepository;
     }
 
-    @PostMapping("/notificar-logro")
+    @GetMapping("/logros-paciente")
     @PreAuthorize("hasAuthority('ROLE_PACIENTE')")
-    public ResponseEntity<?> notificarLogro(@RequestBody java.util.Map<String, Integer> body, Authentication authentication) {
-        System.out.println("Inicio de notificarLogro");
-        Integer tipo = body.get("tipo");
-        System.out.println("Tipo recibido: " + tipo);
+    public ResponseEntity<?> obtenerLogrosPaciente(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Long pacienteId = userDetails.getId();
-        System.out.println("ID del paciente: " + pacienteId);
 
         // Buscar el foro asociado al paciente
         Foro foro = foroRepository.findByPacienteId(pacienteId).orElse(null);
         if (foro == null) {
-            System.out.println("Foro no encontrado para el paciente");
+            return ResponseEntity.badRequest().body("Foro no encontrado para el paciente");
+        }
+
+        // Buscar mensajes de tipo "logro" asociados al foro y filtrados por el emisor
+        System.out.println("Filtrando mensajes de tipo 'logro' para el emisor con ID: " + pacienteId);
+        List<LogroMensajeDTO> mensajesLogro = foro.getMensajes().stream()
+            .filter(mensaje -> "logro".equalsIgnoreCase(mensaje.getTipo()) && mensaje.getEmisor().getId().equals(pacienteId))
+            .map(mensaje -> new LogroMensajeDTO(
+                mensaje.getId(),
+                mensaje.getTipo(),
+                mensaje.getContenido(),
+                mensaje.getTitulo(),
+                mensaje.getDescripcion(),
+                mensaje.getIconoUrl(),
+                mensaje.getImagenFondo(),
+                mensaje.getFecha()
+            ))
+            .toList();
+
+        return ResponseEntity.ok(mensajesLogro);
+    }
+
+    @PostMapping("/notificar-logro")
+    @PreAuthorize("hasAuthority('ROLE_PACIENTE')")
+    public ResponseEntity<?> notificarLogro(@RequestBody java.util.Map<String, Integer> body, Authentication authentication) {
+        Integer tipo = body.get("tipo");
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long pacienteId = userDetails.getId();
+
+        // Buscar el foro asociado al paciente
+        Foro foro = foroRepository.findByPacienteId(pacienteId).orElse(null);
+        if (foro == null) {
             return ResponseEntity.badRequest().body("Foro no encontrado para el paciente");
         }
         System.out.println("Foro encontrado: " + foro.getId());
@@ -59,24 +87,19 @@ public class LogrosController {
         switch (tipo) {
             case 1:
                 foro.setLogroImpulso(true);
-                System.out.println("Logro Impulso actualizado");
                 break;
             case 2:
                 foro.setLogroRitmo(true);
-                System.out.println("Logro Ritmo actualizado");
                 break;
             case 3:
                 foro.setLogroDominio(true);
-                System.out.println("Logro Dominio actualizado");
                 break;
             default:
-                System.out.println("Tipo de logro no válido");
                 return ResponseEntity.badRequest().body("Tipo de logro no válido");
         }
 
         // Guardar los cambios en el foro
         foroRepository.save(foro);
-        System.out.println("Foro guardado correctamente");
         return ResponseEntity.ok("Logro actualizado correctamente en el foro");
     }
 
@@ -142,9 +165,5 @@ public class LogrosController {
                 throw new IllegalArgumentException("Día de la semana no válido: " + dayOfWeek);
         }
     }
-
-    
-
-
 
 }
