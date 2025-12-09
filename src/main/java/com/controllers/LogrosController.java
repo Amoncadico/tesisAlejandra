@@ -51,7 +51,6 @@ public class LogrosController {
         }
 
         // Buscar mensajes de tipo "logro" asociados al foro y filtrados por el emisor
-        System.out.println("Filtrando mensajes de tipo 'logro' para el emisor con ID: " + pacienteId);
         List<LogroMensajeDTO> mensajesLogro = foro.getMensajes().stream()
             .filter(mensaje -> "logro".equalsIgnoreCase(mensaje.getTipo()) && mensaje.getEmisor().getId().equals(pacienteId))
             .map(mensaje -> new LogroMensajeDTO(

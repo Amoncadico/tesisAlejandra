@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.models.EDiaSemana;
 
+
 public class RutinaResponseDTO {
     
     private Long id;
@@ -18,13 +19,16 @@ public class RutinaResponseDTO {
     private Long pacienteId;
     private String pacienteUsername;
     private List<ItemResponseDTO> items;
+    private LocalDate fechaInicio;
+    private LocalDate fechaFin;
 
     public RutinaResponseDTO() {
     }
 
     public RutinaResponseDTO(Long id, String nombre, String descripcion, LocalDate fechaCreacion,
                             Set<EDiaSemana> diasSemana, Long profesionalId, String profesionalUsername,
-                            Long pacienteId, String pacienteUsername, List<ItemResponseDTO> items) {
+                            Long pacienteId, String pacienteUsername, List<ItemResponseDTO> items,
+                            LocalDate fechaInicio, LocalDate fechaFin) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -35,6 +39,8 @@ public class RutinaResponseDTO {
         this.pacienteId = pacienteId;
         this.pacienteUsername = pacienteUsername;
         this.items = items;
+        this.fechaInicio = fechaInicio;
+        this.fechaFin = fechaFin;
     }
 
     // Getters y Setters
@@ -116,6 +122,22 @@ public class RutinaResponseDTO {
 
     public void setItems(List<ItemResponseDTO> items) {
         this.items = items;
+    }
+
+    public LocalDate getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public void setFechaInicio(LocalDate fechaInicio) {
+        this.fechaInicio = fechaInicio;
+    }
+
+    public LocalDate getFechaFin() {
+        return fechaFin;
+    }
+
+    public void setFechaFin(LocalDate fechaFin) {
+        this.fechaFin = fechaFin;
     }
 
     public static class ItemResponseDTO {

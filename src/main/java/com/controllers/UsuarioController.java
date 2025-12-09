@@ -147,6 +147,31 @@ public class UsuarioController {
         }
     }
 
+    @GetMapping("/profesionales")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_PROFESIONAL')")
+    public ResponseEntity<List<UserProfileDTO>> listarProfesionales() {
+        java.util.List<User> profesionales = userRepository.findByRoles_NameIn(
+            java.util.Arrays.asList(com.models.ERole.ROLE_PROFESIONAL, com.models.ERole.ROLE_ADMIN)
+        );
+
+        java.util.List<UserProfileDTO> resultado = profesionales.stream().map(usuario -> {
+            int cantidadPacientes = usuario.getPacientesAsignados() != null ? usuario.getPacientesAsignados().size() : 0;
+            return new UserProfileDTO(
+                usuario.getId(),
+                usuario.getUsername(),
+                usuario.getRut(),
+                usuario.getFechaNacimiento(),
+                usuario.getLesion(),
+                usuario.getFechaRegistro(),
+                usuario.getFoto(),
+                null, // profesionalAsignado no aplica para profesional
+                cantidadPacientes
+            );
+        }).toList();
+
+        return ResponseEntity.ok(resultado);
+    }
+
     @GetMapping("/{userId}")
     public ResponseEntity<User> getUsuario(@PathVariable Long userId) {
         Optional<User> usuarioOptional = userRepository.findById(userId);

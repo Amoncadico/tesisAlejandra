@@ -90,6 +90,22 @@ public class RutinaController {
         return ResponseEntity.ok(rutinasDTO);
     }
 
+    @GetMapping("/pacienteLogueado")
+    public ResponseEntity<List<RutinaResponseDTO>> rutinasPorPacienteLogueado(Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long pacienteId = userDetails.getId();
+
+        List<Rutina> rutinas = rutinaRepository.findByPacienteId(pacienteId);
+        List<RutinaResponseDTO> rutinasDTO = new java.util.ArrayList<>();
+        
+        for (Rutina rutina : rutinas) {
+            RutinaResponseDTO dto = mapearRutinaADTO(rutina);
+            rutinasDTO.add(dto);
+        }
+        
+        return ResponseEntity.ok(rutinasDTO);
+    }
+
     @GetMapping("/pacienteRutinaHoy")
     @PreAuthorize("hasAuthority('ROLE_PACIENTE')")
     public ResponseEntity<?> miRutinaHoy(Authentication authentication) {
@@ -261,6 +277,8 @@ public class RutinaController {
         dto.setDescripcion(rutina.getDescripcion());
         dto.setFechaCreacion(rutina.getFechaCreacion());
         dto.setDiasSemana(rutina.getDiasSemana());
+        dto.setFechaInicio(rutina.getFechaInicio());
+        dto.setFechaFin(rutina.getFechaFin());
         
         // Mapear profesional y paciente de forma segura
         if (rutina.getProfesional() != null) {

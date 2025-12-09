@@ -28,7 +28,6 @@ import com.payload.request.CreatePatientRequest;
 import com.payload.request.LoginRequest;
 import com.payload.request.SignupRequest;
 import com.payload.response.MessageResponse;
-import com.payload.response.UserInfoResponse;
 import com.repository.ForoRepository;
 import com.repository.RoleRepository;
 import com.repository.UserRepository;
@@ -74,10 +73,15 @@ public class AuthController {
         .map(item -> item.getAuthority())
         .collect(Collectors.toList());
 
+    // Además de enviar la cookie, devolver el token en el body para que el
+    // frontend pueda usar Authorization: Bearer <token> y evitar problemas CORS
+    String jwt = jwtUtils.generateTokenFromUsername(userDetails.getUsername());
+
     return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-        .body(new UserInfoResponse(userDetails.getId(),
-                                   userDetails.getUsername(),
-                                   roles));
+      .body(new com.payload.response.UserInfoResponse(userDetails.getId(),
+                     userDetails.getUsername(),
+                     roles,
+                     jwt));
   }
 
   @PostMapping("/signup")
@@ -86,38 +90,21 @@ public class AuthController {
       return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
     }
 
-    // Create new user's account
     User user = new User(signUpRequest.getUsername(),
                          encoder.encode(signUpRequest.getPassword()));
+
+    // Si el request incluye una foto, asignarla al usuario
+    if (signUpRequest.getFoto() != null && !signUpRequest.getFoto().isBlank()) {
+      user.setFoto(signUpRequest.getFoto());
+    }
 
     Set<String> strRoles = signUpRequest.getRole();
     Set<Role> roles = new HashSet<>();
 
     if (strRoles == null) {
-      Role userRole = roleRepository.findByName(ERole.ROLE_PACIENTE)
+      Role userRole = roleRepository.findByName(ERole.ROLE_PROFESIONAL)
           .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
       roles.add(userRole);
-    } else {
-      strRoles.forEach(role -> {
-        switch (role) {
-        case "admin":
-          Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-              .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-          roles.add(adminRole);
-
-          break;
-        case "vis":
-          Role modRole = roleRepository.findByName(ERole.ROLE_PROFESIONAL)
-              .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-          roles.add(modRole);
-
-          break;
-        default:
-          Role userRole = roleRepository.findByName(ERole.ROLE_PACIENTE)
-              .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-          roles.add(userRole);
-        }
-      });
     }
 
     user.setRoles(roles);
