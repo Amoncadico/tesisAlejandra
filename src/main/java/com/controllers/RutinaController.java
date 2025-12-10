@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dto.CrearRutinaRequest;
 import com.dto.RutinaResponseDTO;
 import com.models.EDiaSemana;
+import com.models.ERole;
 import com.models.Ejercicio;
 import com.models.Item;
 import com.models.Rutina;
@@ -216,6 +217,89 @@ public class RutinaController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse("Error: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error interno del servidor"));
+        }
+    }
+
+    @PutMapping("/editar/{id}")
+    @PreAuthorize("hasAuthority('ROLE_PROFESIONAL') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> editarRutinaCompleta(@PathVariable Long id, @Valid @RequestBody CrearRutinaRequest request, Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User profesional = userRepository.findById(userDetails.getId())
+                    .orElseThrow(() -> new RuntimeException("Profesional no encontrado"));
+
+            Rutina rutina = rutinaRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Rutina no encontrada"));
+
+            // Permitir solo al profesional propietario o admin
+            boolean isAdmin = profesional.getRoles().stream()
+                    .anyMatch(r -> r.getName().equals(ERole.ROLE_ADMIN));
+            if (!isAdmin && (rutina.getProfesional() == null || !rutina.getProfesional().getId().equals(profesional.getId()))) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageResponse("No tienes permisos para editar esta rutina"));
+            }
+
+            // Validar y asignar paciente
+            User paciente = userRepository.findById(request.getPacienteId())
+                    .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+            rutina.setPaciente(paciente);
+
+            // Actualizar campos si vienen en el request
+            if (request.getNombre() != null) rutina.setNombre(request.getNombre());
+            if (request.getDescripcion() != null) rutina.setDescripcion(request.getDescripcion());
+            rutina.setFechaInicio(request.getFechaInicio());
+            rutina.setFechaFin(request.getFechaFin());
+
+            if (request.getDiasSemana() != null) {
+                rutina.setDiasSemana(request.getDiasSemana());
+            } else {
+                rutina.setDiasSemana(new HashSet<>());
+            }
+
+            // Guardar cambios básicos de rutina
+            Rutina rutinaSaved = rutinaRepository.save(rutina);
+
+            // Eliminar items existentes
+            if (rutinaSaved.getItems() != null && !rutinaSaved.getItems().isEmpty()) {
+                itemRepository.deleteAll(rutinaSaved.getItems());
+            }
+
+            // Crear y asociar nuevos items si vienen
+            if (request.getItems() != null && !request.getItems().isEmpty()) {
+                for (CrearRutinaRequest.ItemRequest itemReq : request.getItems()) {
+                    Ejercicio ejercicio = ejercicioRepository.findById(itemReq.getEjercicioId())
+                            .orElseThrow(() -> new RuntimeException("Ejercicio no encontrado: " + itemReq.getEjercicioId()));
+
+                    Item item = new Item();
+                    item.setEjercicio(ejercicio);
+                    item.setRutina(rutinaSaved);
+
+                    if (itemReq.getDuracionSegundos() != null && itemReq.getDuracionSegundos() > 0) {
+                        item.setDuracion(Duration.ofSeconds(itemReq.getDuracionSegundos()));
+                        item.setSeries(0);
+                        item.setRepeticiones(0);
+                    } else {
+                        item.setSeries(itemReq.getSeries() != null ? itemReq.getSeries() : 0);
+                        item.setRepeticiones(itemReq.getRepeticiones() != null ? itemReq.getRepeticiones() : 0);
+                        item.setDuracion(null);
+                    }
+
+                    if (itemReq.getObservaciones() != null && !itemReq.getObservaciones().isEmpty()) {
+                        item.setObservaciones(itemReq.getObservaciones());
+                    }
+
+                    itemRepository.save(item);
+                }
+            }
+
+            Rutina rutinaCompleta = rutinaRepository.findById(rutinaSaved.getId()).orElse(rutinaSaved);
+            RutinaResponseDTO responseDTO = mapearRutinaADTO(rutinaCompleta);
+            return ResponseEntity.ok(responseDTO);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: " + e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new MessageResponse("Error interno del servidor"));

@@ -1,5 +1,8 @@
 package com.controllers;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -38,6 +41,24 @@ public class RegistroController {
     public RegistroController(RegistroRepository registroRepository, RutinaRepository rutinaRepository) {
         this.registroRepository = registroRepository;
         this.rutinaRepository = rutinaRepository;
+    }
+
+    @GetMapping("/registroHoy")
+    @PreAuthorize("hasAuthority('ROLE_PACIENTE')")
+    public ResponseEntity<Boolean> tieneRegistroHoy(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Long pacienteId = userDetails.getId();
+
+            LocalDate today = LocalDate.now(ZoneId.systemDefault());
+            Date startOfDay = Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            Date startOfNextDay = Date.from(today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+            boolean existe = registroRepository.existsByRutinaPacienteIdAndFechaBetween(pacienteId, startOfDay, startOfNextDay);
+            return ResponseEntity.ok(existe);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
+        }
     }
 
     @GetMapping("/listar")

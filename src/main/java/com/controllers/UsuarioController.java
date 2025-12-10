@@ -22,7 +22,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dto.UserProfileDTO;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.models.User;
+import com.repository.MensajeRepository;
 import com.repository.UserRepository;
 import com.security.services.UserDetailsImpl;
 
@@ -32,13 +35,20 @@ import com.security.services.UserDetailsImpl;
 public class UsuarioController {
 
     private final UserRepository userRepository;
+    private final com.repository.ForoRepository foroRepository;
+    private final MensajeRepository mensajeRepository;
 
-    public UsuarioController(UserRepository userRepository) {
+    public UsuarioController(UserRepository userRepository, com.repository.ForoRepository foroRepository, MensajeRepository mensajeRepository) {
         this.userRepository = userRepository;
+        this.foroRepository = foroRepository;
+        this.mensajeRepository = mensajeRepository;
     }
 
     @Autowired
     PasswordEncoder encoder;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @GetMapping("/usuarios")
     @PreAuthorize("hasRole('ADMIN')")
@@ -172,6 +182,8 @@ public class UsuarioController {
         return ResponseEntity.ok(resultado);
     }
 
+    
+
     @GetMapping("/{userId}")
     public ResponseEntity<User> getUsuario(@PathVariable Long userId) {
         Optional<User> usuarioOptional = userRepository.findById(userId);
@@ -201,12 +213,19 @@ public class UsuarioController {
     }
 
     @PutMapping("/{userId}")
-    @PreAuthorize("hasRole('EVALUADOR') or hasRole('VISADOR') or hasRole('ADMIN')")
-    public ResponseEntity<User> actualizarUsuario(@PathVariable Long userId, @RequestBody User usuarioActualizado) {
+    @PreAuthorize("hasRole('PROFESIONAL') or hasRole('ADMIN')")
+    public ResponseEntity<?> actualizarUsuario(@PathVariable Long userId, @RequestBody JsonNode payload) {
         Optional<User> usuarioOptional = userRepository.findById(userId);
 
         if (usuarioOptional.isPresent()) {
             User usuario = usuarioOptional.get();
+            // Convertir payload a User para los campos normales (profesionalAsignado estará ignorado por @JsonIgnore)
+            User usuarioActualizado = null;
+            try {
+                usuarioActualizado = objectMapper.treeToValue(payload, User.class);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new com.payload.response.MessageResponse("Payload inválido"));
+            }
 
             // Actualizar los campos relevantes del usuario con la información proporcionada en usuarioActualizado
             if(usuarioActualizado.getUsername() != null && !usuarioActualizado.getUsername().isEmpty()) {
@@ -228,6 +247,49 @@ public class UsuarioController {
                 usuario.setFoto(usuarioActualizado.getFoto());
             }
             
+            // Si se cambia el profesional asignado, validar y actualizar también el foro y las relaciones inversas
+            if (payload.has("profesionalAsignado") && payload.get("profesionalAsignado").has("id") && !payload.get("profesionalAsignado").get("id").isNull()) {
+                Long nuevoProfesionalId = payload.get("profesionalAsignado").get("id").asLong();
+                // Buscar el nuevo profesional
+                User nuevoProfesional = userRepository.findById(nuevoProfesionalId).orElse(null);
+                if (nuevoProfesional == null) {
+                    // Devolvemos 400 para que el cliente sepa que el id no es válido
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new com.payload.response.MessageResponse("Profesional con id " + nuevoProfesionalId + " no encontrado"));
+                }
+
+                // Actualizar la relación en el usuario (lado propietario)
+                User profesionalAnterior = usuario.getProfesionalAsignado();
+                usuario.setProfesionalAsignado(nuevoProfesional);
+
+                // Actualizar colecciones inversas: quitar paciente del profesionalAnterior y agregar al nuevoProfesional
+                if (profesionalAnterior != null && profesionalAnterior.getPacientesAsignados() != null) {
+                    profesionalAnterior.getPacientesAsignados().removeIf(p -> p.getId().equals(usuario.getId()));
+                    userRepository.save(profesionalAnterior);
+                }
+
+                if (nuevoProfesional.getPacientesAsignados() == null) {
+                    nuevoProfesional.setPacientesAsignados(new java.util.HashSet<>());
+                }
+                // Asegurar que el set contiene al paciente
+                boolean ya = nuevoProfesional.getPacientesAsignados().stream().anyMatch(p -> p.getId().equals(usuario.getId()));
+                if (!ya) {
+                    nuevoProfesional.getPacientesAsignados().add(usuario);
+                    userRepository.save(nuevoProfesional);
+                }
+
+                // Actualizar el foro del paciente, si existe: borrar mensajes previos y reasignar profesional
+                foroRepository.findByPacienteId(usuario.getId()).ifPresent(foro -> {
+                    try {
+                        mensajeRepository.deleteByForo(foro);
+                    } catch (Exception ex) {
+                        System.out.println("[WARN] Error borrando mensajes del foro " + foro.getId() + ": " + ex.getMessage());
+                    }
+
+                    foro.setProfesional(nuevoProfesional);
+                    foroRepository.save(foro);
+                });
+            }
+            
             // Guardar el usuario actualizado
             userRepository.save(usuario);
 
@@ -236,6 +298,78 @@ public class UsuarioController {
             return ResponseEntity.notFound().build();
         }
 
+    }
+
+    @PutMapping("/editar-paciente/{pacienteId}")
+    @PreAuthorize("hasAuthority('ROLE_PROFESIONAL') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> editarPacienteAsociado(@PathVariable Long pacienteId, @RequestBody User usuarioActualizado, Authentication authentication) {
+        // Obtener profesional autenticado
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long profesionalId = userDetails.getId();
+
+        User profesional = userRepository.findById(profesionalId).orElse(null);
+        if (profesional == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new com.payload.response.MessageResponse("Profesional no encontrado"));
+        }
+
+        User paciente = userRepository.findById(pacienteId).orElse(null);
+        if (paciente == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Permisos: si no es ADMIN, verificar que el paciente esté asignado al profesional
+        boolean isAdmin = profesional.getRoles().stream()
+                .anyMatch(r -> r.getName().equals(com.models.ERole.ROLE_ADMIN));
+
+        if (!isAdmin) {
+            if (paciente.getProfesionalAsignado() == null || !paciente.getProfesionalAsignado().getId().equals(profesionalId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new com.payload.response.MessageResponse("No tienes permiso para editar este paciente"));
+            }
+        }
+
+        // Actualizar campos permitidos
+        if (usuarioActualizado.getUsername() != null && !usuarioActualizado.getUsername().isEmpty()) {
+            paciente.setUsername(usuarioActualizado.getUsername());
+        }
+        if (usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isEmpty()) {
+            paciente.setPassword(encoder.encode(usuarioActualizado.getPassword()));
+        }
+        if (usuarioActualizado.getRut() != null) {
+            paciente.setRut(usuarioActualizado.getRut());
+        }
+        if (usuarioActualizado.getLesion() != null) {
+            paciente.setLesion(usuarioActualizado.getLesion());
+        }
+        if (usuarioActualizado.getFechaNacimiento() != null) {
+            paciente.setFechaNacimiento(usuarioActualizado.getFechaNacimiento());
+        }
+        if (usuarioActualizado.getFoto() != null) {
+            paciente.setFoto(usuarioActualizado.getFoto());
+        }
+
+        // No permitimos cambiar roles ni profesionalAsignado aquí (salvo vía otro endpoint)
+
+        User actualizado = userRepository.save(paciente);
+
+        // Devolver UserProfileDTO como en otros endpoints
+        String profesionalUsername = null;
+        if (actualizado.getProfesionalAsignado() != null) {
+            profesionalUsername = actualizado.getProfesionalAsignado().getUsername();
+        }
+
+        UserProfileDTO dto = new UserProfileDTO(
+                actualizado.getId(),
+                actualizado.getUsername(),
+                actualizado.getRut(),
+                actualizado.getFechaNacimiento(),
+                actualizado.getLesion(),
+                actualizado.getFechaRegistro(),
+                actualizado.getFoto(),
+                profesionalUsername,
+                null
+        );
+
+        return ResponseEntity.ok(dto);
     }
 
 }
