@@ -23,9 +23,11 @@ import com.repository.EjercicioRepository;
 public class EjercicioController {
 
     private final EjercicioRepository ejercicioRepository;
+    private final com.repository.ItemRepository itemRepository;
 
-    public EjercicioController(EjercicioRepository ejercicioRepository) {
+    public EjercicioController(EjercicioRepository ejercicioRepository, com.repository.ItemRepository itemRepository) {
         this.ejercicioRepository = ejercicioRepository;
+        this.itemRepository = itemRepository;
     }
 
     @GetMapping("/listar")
@@ -77,9 +79,19 @@ public class EjercicioController {
         if (ejercicio == null) {
             return ResponseEntity.notFound().build();
         }
+        // Antes de eliminar el ejercicio, limpiar la referencia en los items asociados
+        try {
+            if (itemRepository != null) {
+                itemRepository.clearEjercicioFromItems(ejercicio);
+            }
+        } catch (Exception ex) {
+            System.out.println("[WARN] Error limpiando items antes de eliminar ejercicio " + id + ": " + ex.getMessage());
+        }
         ejercicioRepository.delete(ejercicio);
         return ResponseEntity.noContent().build();
     }
+
+    
 
 }
  
